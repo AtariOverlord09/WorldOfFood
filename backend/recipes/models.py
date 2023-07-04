@@ -1,7 +1,6 @@
 """Модели приложения recepies."""
-from typing import Any
-from django.core.exceptions import ValidationError
 from django.db import models
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 from users.models import User
 
@@ -21,13 +20,6 @@ class Ingredient(models.Model):
 
     def __str__(self):
         return self.name
-
-
-def validate_cooking_time(value):
-    if value < 1:
-        raise ValidationError(
-            'Время приготовления не может быть меньше одной минуты'
-        )
 
 
 class Tag(models.Model):
@@ -71,16 +63,16 @@ class Recipe(models.Model):
     name = models.CharField(max_length=200, verbose_name='Название')
     text = models.TextField(verbose_name='Описание')
     cooking_time = models.IntegerField(
-        validators=[validate_cooking_time],
+        validators=[MinValueValidator(1), MaxValueValidator(1000)],
         verbose_name='Время приготовления (в минутах)',
     )
+
+    def __str__(self):
+        return self.name
 
     class Meta:
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
-
-    def __str__(self):
-        return self.name
 
 
 class TagRecipe(models.Model):
@@ -154,38 +146,17 @@ class FavoriteRecipeUser(models.Model):
         return f'{self.user} - {self.recipe}'
 
 
-class ShoppingCard(models.Model):
-    """Модель списка продуктов для покупки."""
-
-    name = models.CharField(max_length=155, verbose_name='название')
-    image = models.ImageField(
-        upload_to='favorite_recipes/images',
-        verbose_name='изображение',
-    )
-    cooking_time = models.IntegerField(
-        validators=[validate_cooking_time],
-        verbose_name='Время приготовления (в минутах)',
-    )
-
-    class Meta:
-        verbose_name = 'Список продуктов'
-        verbose_name_plural = 'Списки продуктов'
-
-    def __str__(self):
-        return self.name
-
-
-class ShoppingCardUser(models.Model):
-    """Модель для связи рецептов и спикоптов пользователя."""
+class ShoppingCartUser(models.Model):
+    """Модель для связи списка продуктов и пользователя."""
 
     user = models.ForeignKey(
         User,
-        related_name='shopping_card',
+        related_name='shopping_carts',
         on_delete=models.CASCADE,
     )
-    shopping_card = models.ForeignKey(
-        ShoppingCard,
-        related_name='users',
+    recipe = models.ForeignKey(
+        Recipe,
+        related_name='recipes_in_shopping_cart',
         on_delete=models.CASCADE,
     )
 

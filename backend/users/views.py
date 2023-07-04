@@ -1,11 +1,10 @@
 """Обработчики приложения users."""
 from djoser.views import UserViewSet
-from rest_framework.decorators import action
-from rest_framework import permissions
-from rest_framework.response import Response
+from django.contrib.auth import get_user_model
 
-from users.models import User
-from users.serializers import CustomUserCreateSerializer, CustomUserSerializer
+from users.serializers import CustomUserCreateSerializer
+
+User = get_user_model()
 
 
 class CustomUserViewSet(UserViewSet):

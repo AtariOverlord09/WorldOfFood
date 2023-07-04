@@ -1,36 +1,12 @@
 """Модель User."""
-from django.core.validators import EmailValidator
-from django.contrib.auth.models import (
-    AbstractUser
-)
 from django.db import models
+from django.contrib.auth import get_user_model
 
-
-class User(AbstractUser):
-    """Модель пользователя с некоторым переопредлением."""
-
-    fisrt_name = models.CharField(
-        max_length=150,
-        verbose_name="имя",
-    )
-    last_name = models.CharField(
-        max_length=150,
-        verbose_name="фамилия",
-    )
-    email = models.EmailField(
-        max_length=254,
-        verbose_name="почта",
-        validators=[
-            EmailValidator(message="Введите верный адрес электронной почты"),
-        ],
-    )
-
-    def __str__(self):
-        return self.username
+User = get_user_model()
 
 
 class Follow(models.Model):
-    """Модель подпадения."""
+    """Модель подписки."""
 
     follower = models.ForeignKey(
         User,
@@ -47,4 +23,4 @@ class Follow(models.Model):
     )
 
     def __str__(self):
-        return f"{self.user} подпадает на {self.following}"
+        return f"{self.follower} подписан на {self.following}"
