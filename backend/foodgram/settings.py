@@ -122,6 +122,10 @@ STATIC_URL = '/static/'
 
 MEDIA_URL = '/media/'
 
+CORS_ALLOW_ALL_ORIGINS = True
+
+ROOT_URLCONF = 'foodgram.urls'
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
