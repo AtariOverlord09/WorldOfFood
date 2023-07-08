@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'djoser',
     'django_filters',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
@@ -45,9 +46,19 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+CORS_ALLOWED_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
 
+CORS_ALLOW_ALL_ORIGINS = True
 ROOT_URLCONF = 'foodgram.urls'
 
 TEMPLATES = [
@@ -122,7 +133,6 @@ STATIC_URL = '/static/'
 
 MEDIA_URL = '/media/'
 
-CORS_ALLOW_ALL_ORIGINS = True
 
 ROOT_URLCONF = 'foodgram.urls'
 

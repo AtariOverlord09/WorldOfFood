@@ -31,11 +31,11 @@ class Follow(models.Model):
         verbose_name_plural = "Подписки"
         constraints = [
             UniqueConstraint(
-                fields=['user', 'author'],
+                fields=['follower', 'following'],
                 name='Валидатор повторной подписки'
             ),
             CheckConstraint(
                 name="Валидатор подписки на себя",
-                check=~models.Q(user=models.F('author')),
+                check=~models.Q(follower=models.F('following')),
             ),
         ]
