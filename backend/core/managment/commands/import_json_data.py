@@ -7,7 +7,6 @@ from recipes.models import Ingredient
 
 
 class Command(BaseCommand):
-
     def handle(self, *args, **options):
         try:
             with open('data/ingredients.json', encoding='utf-8') as json_file:
@@ -21,16 +20,14 @@ class Command(BaseCommand):
             ingredients_to_create.append(
                 Ingredient(
                     name=ingredient['name'],
-                    measurement_unit=ingredient['measurement_unit']
+                    measurement_unit=ingredient['measurement_unit'],
                 )
             )
 
         try:
             Ingredient.objects.bulk_create(ingredients_to_create)
-            self.stdout.write(self.style.SUCCESS(
-                'Ингридиенты успешно импортированы.')
-            )
+            self.stdout.write(self.style.SUCCESS('Ингридиенты успешно импортированы.'))
         except IntegrityError as e:
-            self.stdout.write(self.style.ERROR(
-                'Ошибка импорта ингридиентов: {}'.format(str(e)))
+            self.stdout.write(
+                self.style.ERROR('Ошибка импорта ингридиентов: {}'.format(str(e)))
             )

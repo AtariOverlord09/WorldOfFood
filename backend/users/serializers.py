@@ -1,21 +1,33 @@
+from django.contrib.auth import get_user_model
+from djoser.serializers import UserCreateSerializer
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
-from djoser.serializers import UserCreateSerializer, UserSerializer
-from django.contrib.auth import get_user_model
+
+from users.models import Follow
 
 User = get_user_model()
 
 
-class CustomUserCreateSerializer(UserCreateSerializer):
+class CustomUserSerializer(UserCreateSerializer):
     email = serializers.EmailField(
-        validators=[UniqueValidator(queryset=User.objects.all())])
+        validators=[UniqueValidator(queryset=User.objects.all())]
+    )
     username = serializers.CharField(
-        validators=[UniqueValidator(queryset=User.objects.all())])
+        validators=[UniqueValidator(queryset=User.objects.all())]
+    )
+    is_subscribed = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = (
-            'email', 'id', 'password', 'username', 'first_name', 'last_name')
+            'email',
+            'id',
+            'password',
+            'username',
+            'first_name',
+            'last_name',
+            'is_subscribed',
+        )
         extra_kwargs = {
             'email': {'required': True},
             'username': {'required': True},
@@ -24,11 +36,11 @@ class CustomUserCreateSerializer(UserCreateSerializer):
             'last_name': {'required': True},
         }
 
+    def get_is_subscribed(self, obj):
+        request = self.context.get('request')
+        is_following = Follow.objects.filter(
+            follower=request.user,
+            following=obj,
+        ).exists()
 
-class CustomUserSerializer(UserSerializer):
-
-    class Meta:
-        model = User
-        fields = (
-            'id', 'email', 'username', 'first_name', 'last_name',
-        )
+        return is_following

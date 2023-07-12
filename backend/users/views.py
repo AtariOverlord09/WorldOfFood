@@ -1,13 +1,12 @@
 """Обработчики приложения users."""
-from djoser.views import UserViewSet
 from django.contrib.auth import get_user_model
+from djoser.views import UserViewSet
 
-from users.serializers import CustomUserCreateSerializer
+from users.serializers import CustomUserSerializer
 
 User = get_user_model()
 
 
 class CustomUserViewSet(UserViewSet):
-
     queryset = User.objects.all()
-    serializer_class = CustomUserCreateSerializer
+    serializer_class = CustomUserSerializer

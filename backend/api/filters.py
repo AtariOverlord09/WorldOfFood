@@ -12,11 +12,9 @@ class IngredientFilter(SearchFilter):
 
 
 class RecipeFilter(django_filters.FilterSet):
+    author = django_filters.CharFilter(field_name='author__id')
     tags = django_filters.AllValuesMultipleFilter(field_name='tags__slug')
-    author = django_filters.ModelChoiceFilter(
-        queryset=User.objects.all()
-    )
 
     class Meta:
         model = Recipe
-        fields = ('tags', 'author',)
+        fields = ('tags', 'author')

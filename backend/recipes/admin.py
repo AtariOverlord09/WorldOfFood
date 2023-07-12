@@ -1,50 +1,58 @@
 from django.contrib import admin
 
-#from recipes.models import (
-#    Ingredient,
-#    IngredientRecipe,
-#    Tag,
-#    TagRecipe,
-#    Recipe,
-#    FavoriteRecipeUser,
-#    ShoppingCartUser,
-#    ShoppingCard,
-#)
-#
-#
-#class IngedientAdmin(admin.ModelAdmin):
-#    inlines = (GenreInline,)
-#    list_display = ("pk", "name", "year", "category", "description")
-#    list_editable = ("name", "year", "description")
-#    search_fields = ("name", "year", "category", "genre")
-#    list_filter = ("name", "year", "category", "genre")
-#    empty_value_display = "-пусто-"
-#
-#
-#class CategoryAdmin(admin.ModelAdmin):
-#    list_display = ("pk", "name", "slug")
-#
-#
-#class GenreAdmin(admin.ModelAdmin):
-#    list_display = ("pk", "name", "slug")
-#
-#
-#class ReviewAdmin(admin.ModelAdmin):
-#    list_display = ("pk", "author", "title", "text", "score", "pub_date")
-#    search_fields = ("author", "title", "score")
-#    list_filter = ("author", "title", "score")
-#    empty_value_display = "-пусто-"
-#
-#
-#class CommentAdmin(admin.ModelAdmin):
-#    list_display = ("pk", "author", "review", "text", "pub_date")
-#    search_fields = ("author", "review")
-#    list_filter = ("author", "review")
-#    empty_value_display = "-пусто-"
-#
-#
-#admin.site.register(Category, CategoryAdmin)
-#admin.site.register(Genre, GenreAdmin)
-#admin.site.register(Title, TitleAdmin)
-#admin.site.register(Review, ReviewAdmin)
-#admin.site.register(Comment, CommentAdmin)
+from recipes.models import (
+    FavoriteRecipeUser,
+    Ingredient,
+    IngredientRecipe,
+    Recipe,
+    ShoppingCartUser,
+    TagRecipe,
+)
+
+
+@admin.register(Ingredient)
+class IngredientAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'measurement_unit')
+    search_fields = ('name',)
+    list_filter = ('name',)
+
+
+@admin.register(Recipe)
+class RecipeAdmin(admin.ModelAdmin):
+    list_display = (
+        'id',
+        'name',
+        'author',
+        'cooking_time',
+        'pub_date',
+        'get_favorite_count',
+    )
+    search_fields = ('name',)
+    list_filter = ('name', 'author', 'tags')
+
+
+@admin.register(TagRecipe)
+class TagRecipeAdmin(admin.ModelAdmin):
+    list_display = ('name', 'color', 'slug')
+    search_fields = ('name', 'slug')
+
+
+@admin.register(IngredientRecipe)
+class IngredientRecipeAdmin(admin.ModelAdmin):
+    list_display = ('ingredient', 'recipe', 'amount')
+    search_fields = ('ingredient__name', 'recipe__name')
+    list_filter = ('ingredient', 'recipe')
+
+
+@admin.register(FavoriteRecipeUser)
+class FavoriteRecipeUserAdmin(admin.ModelAdmin):
+    list_display = ('user', 'recipe')
+    search_fields = ('user__username', 'recipe__name')
+    list_filter = ('user',)
+
+
+@admin.register(ShoppingCartUser)
+class ShoppingCartUserAdmin(admin.ModelAdmin):
+    list_display = ('user', 'recipe')
+    search_fields = ('user__username', 'recipe__name')
+    list_filter = ('user',)
