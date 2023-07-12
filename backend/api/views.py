@@ -109,10 +109,12 @@ class RecipesViewSet(viewsets.ModelViewSet):
         permission_classes=(IsAuthenticated,),
     )
     def download_shopping_cart(self, request):
+
         ingredients = request.user.shopping_carts.values(
             'recipe_id__ingredients_in_recipe__ingredient__name',
             'recipe_id__ingredients_in_recipe__ingredient__measurement_unit',
         ).annotate(amount=Sum('recipe_id__ingredients_in_recipe__amount'))
+
         shopping_list = 'Список покупок: \n'
         count_ingredients = 0
         for ingr in ingredients:
@@ -136,6 +138,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
             f'attachment; '
             f'filename="{self.request.user.username} shopping list.txt"'
         )
+
         return response
 
 
@@ -163,7 +166,7 @@ class FollowUserView(APIView):
         author = get_object_or_404(User, id=id)
         if request.user.follower.filter(following=author).exists():
             return Response(
-                {'errors': 'Вы уже подписаны на автора'},
+                {'errors': 'Подписка уже оформлена'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         serializer = FollowSerializer(
@@ -178,7 +181,7 @@ class FollowUserView(APIView):
             request.user.follower.filter(following=author).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(
-            {'errors': 'Автор отсутсвует в списке подписок'},
+            {'errors': 'В списке подписок нет такого автора'},
             status=status.HTTP_400_BAD_REQUEST,
         )
 

@@ -9,7 +9,10 @@ from recipes.models import Ingredient
 class Command(BaseCommand):
     def handle(self, *args, **options):
         try:
-            with open('data/ingredients.json', encoding='utf-8') as json_file:
+            with open(
+                '../data/ingredients.json',
+                encoding='utf-8',
+            ) as json_file:
                 data = json.load(json_file)
         except FileNotFoundError:
             self.stdout.write(self.style.ERROR('Файл не найден.'))
@@ -26,8 +29,14 @@ class Command(BaseCommand):
 
         try:
             Ingredient.objects.bulk_create(ingredients_to_create)
-            self.stdout.write(self.style.SUCCESS('Ингридиенты успешно импортированы.'))
-        except IntegrityError as e:
+            self.stdout.write(self.style.SUCCESS(
+                'Ингридиенты успешно импортированы.'
+            ))
+        except IntegrityError as error:
             self.stdout.write(
-                self.style.ERROR('Ошибка импорта ингридиентов: {}'.format(str(e)))
+                self.style.ERROR(
+                   'Возникла ошибка при импорте ингедиентов: {}'.format(
+                      str(error),
+                    )
+                )
             )
