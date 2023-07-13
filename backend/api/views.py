@@ -115,18 +115,23 @@ class RecipesViewSet(viewsets.ModelViewSet):
     def download_shopping_cart(self, request):
 
         ingredients = request.user.shopping_carts.values(
-            'recipe_id__ingredients_in_recipe__ingredient__name',
-            'recipe_id__ingredients_in_recipe__ingredient__measurement_unit',
-        ).annotate(amount=Sum('recipe_id__ingredients_in_recipe__amount'))
+            'recipe_id__ingr_in_recipe__ingredient__name',
+            'recipe_id__ingr_in_recipe__ingredient__measurement_unit',
+        ).annotate(amount=Sum('recipe_id__ingr_in_recipe__amount'))
 
         ingr_count = ingredients.count()
         shopping_list = [
-            f'{numerate}) '
-            f'{ingr["recipe_id__ingredients_in_recipe__ingredient__name"]} - '
-            f'{ingr["amount"]} '
-            f'({ingr["recipe_id__ingredients_in_recipe__ingredient__measurement_unit"]}) \n '
+            '{}) {} - {} ({})\n'.format(
+                numerate,
+                ingr['recipe_id__ingr_in_recipe__ingredient__name'],
+                ingr['amount'],
+                ingr[
+                    'recipe_id__ingr_in_recipe__ingredient__measurement_unit'
+                ]
+            )
             for numerate, ingr in enumerate(ingredients, 1)
         ]
+
         shopping_list.insert(0, f'Количество ингедиентов: {ingr_count}\nСписок ингедиентов:\n\n')
         content = '\n'.join(shopping_list)
 

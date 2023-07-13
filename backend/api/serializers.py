@@ -1,5 +1,4 @@
 from django.contrib.auth import get_user_model
-from django.shortcuts import get_object_or_404
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
@@ -106,7 +105,7 @@ class RecipesReadSerializer(serializers.ModelSerializer):
 
     def get_ingredients(self, obj):
         return RecipeIngredientReadSerializer(
-            obj.ingredients_in_recipe.all(),
+            obj.ingr_in_recipe.all(),
             many=True,
         ).data
 
@@ -167,10 +166,12 @@ class RecipesWriteSerializer(serializers.ModelSerializer):
         for ingr in ingredients:
             ingredient_id = ingr.get('id')
             amount = ingr.get('amount')
-            ingredient_recipe, created = IngredientRecipe.objects.get_or_create(
-                recipe=recipe,
-                ingredient_id=ingredient_id,
-                defaults={'amount': amount}
+            ingredient_recipe, created = (
+                IngredientRecipe.objects.get_or_create(
+                    recipe=recipe,
+                    ingredient_id=ingredient_id,
+                    defaults={'amount': amount}
+                )
             )
             if not created:
                 ingredient_recipe.amount = amount
@@ -218,7 +219,7 @@ class RecipesWriteSerializer(serializers.ModelSerializer):
             recipe.cooking_time,
         )
 
-        recipe.ingredients_in_recipe.all().delete()
+        recipe.ingr_in_recipe.all().delete()
         ingredients = validated_data.pop('ingredients')
         with transaction.atomic():
             self.add_ingredients(recipe, ingredients)
