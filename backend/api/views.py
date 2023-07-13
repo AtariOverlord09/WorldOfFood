@@ -60,6 +60,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
                 user=author,
             ).values('recipe_id')
             return queryset.filter(pk__in=cart_recipes_ids)
+
         return queryset
 
     def add_in_list(self, model, user, pk):
@@ -68,9 +69,11 @@ class RecipesViewSet(viewsets.ModelViewSet):
                 {'errors': f'Рецепт уже добавлен в {model.__name__}'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
         recipe = get_object_or_404(Recipe, pk=pk)
         model.objects.create(user=user, recipe=recipe)
         serializer = RecipeListSerializer(recipe)
+
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def delete_in_list(self, model, user, pk):
@@ -78,6 +81,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
         if obj.exists():
             obj.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
+
         return Response(
             {'errors': f'Рецепт не добавлен в {model.__name__}'},
             status=status.HTTP_400_BAD_REQUEST,
@@ -104,7 +108,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
         return self.delete_in_list(ShoppingCartUser, request.user, pk)
 
     @action(
-        methods=('GET'),
+        methods=('GET', ),
         detail=False,
         permission_classes=(IsAuthenticated,),
     )
@@ -115,25 +119,18 @@ class RecipesViewSet(viewsets.ModelViewSet):
             'recipe_id__ingredients_in_recipe__ingredient__measurement_unit',
         ).annotate(amount=Sum('recipe_id__ingredients_in_recipe__amount'))
 
-        shopping_list = 'Список покупок: \n'
-        count_ingredients = 0
-        for ingr in ingredients:
-            count_ingredients += 1
-            shopping_list += (
-                f'{count_ingredients}) '
-                f'''
-                    {
-                        ingr["recipe_id__ingredients_in_recipe__ingredient__name"]
-                    } -
-                '''
-                f'{ingr["amount"]} '
-                f'''
-                    ({
-                        ingr["recipe_id__ingredients_in_recipe__ingredient__measurement_unit"]
-                    }) \n
-                '''
-            )
-        response = HttpResponse(shopping_list, 'Content-Type: text/plain')
+        ingr_count = ingredients.count()
+        shopping_list = [
+            f'{numerate}) '
+            f'{ingr["recipe_id__ingredients_in_recipe__ingredient__name"]} - '
+            f'{ingr["amount"]} '
+            f'({ingr["recipe_id__ingredients_in_recipe__ingredient__measurement_unit"]}) \n '
+            for numerate, ingr in enumerate(ingredients, 1)
+        ]
+        shopping_list.insert(0, f'Количество ингедиентов: {ingr_count}\nСписок ингедиентов:\n\n')
+        content = '\n'.join(shopping_list)
+
+        response = HttpResponse(content,  content_type='text/plain')
         response['Content-Disposition'] = (
             f'attachment; '
             f'filename="{self.request.user.username} shopping list.txt"'
@@ -169,10 +166,12 @@ class FollowUserView(APIView):
                 {'errors': 'Подписка уже оформлена'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
         serializer = FollowSerializer(
             request.user.follower.create(following=author),
             context={'request': request},
         )
+
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def delete(self, request, id):
@@ -180,6 +179,7 @@ class FollowUserView(APIView):
         if request.user.follower.filter(following=author).exists():
             request.user.follower.filter(following=author).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
+
         return Response(
             {'errors': 'В списке подписок нет такого автора'},
             status=status.HTTP_400_BAD_REQUEST,

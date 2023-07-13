@@ -3,6 +3,7 @@ from django.shortcuts import get_object_or_404
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
+from django.db import transaction
 
 from recipes.models import (
     FavoriteRecipeUser,
@@ -48,13 +49,16 @@ class RecipeIngredientWriteSerializer(serializers.Serializer):
 
 
 class RecipeIngredientReadSerializer(serializers.ModelSerializer):
-    id = serializers.IntegerField()
+    id = serializers.SerializerMethodField()
     name = serializers.SerializerMethodField(read_only=True)
     measurement_unit = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         fields = ('id', 'name', 'amount', 'measurement_unit')
         model = IngredientRecipe
+
+    def get_id(self, obj):
+        return obj.ingredient.id
 
     def get_name(self, obj):
         return obj.ingredient.name
@@ -102,7 +106,8 @@ class RecipesReadSerializer(serializers.ModelSerializer):
 
     def get_ingredients(self, obj):
         return RecipeIngredientReadSerializer(
-            obj.ingredients_in_recipe.all(), many=True
+            obj.ingredients_in_recipe.all(),
+            many=True,
         ).data
 
     def get_is_favorited(self, obj):
@@ -159,22 +164,21 @@ class RecipesWriteSerializer(serializers.ModelSerializer):
         return serializer.data
 
     def add_ingredients(self, recipe, ingredients):
-        IngredientRecipe.objects.bulk_create(
-            [
-                IngredientRecipe(
-                    recipe=recipe,
-                    ingredient=get_object_or_404(
-                        Ingredient,
-                        pk=ingr.get('id'),
-                    ),
-                    amount=ingr.get('amount'),
-                )
-                for ingr in ingredients
-            ]
-        )
+        for ingr in ingredients:
+            ingredient_id = ingr.get('id')
+            amount = ingr.get('amount')
+            ingredient_recipe, created = IngredientRecipe.objects.get_or_create(
+                recipe=recipe,
+                ingredient_id=ingredient_id,
+                defaults={'amount': amount}
+            )
+            if not created:
+                ingredient_recipe.amount = amount
+                ingredient_recipe.save()
 
     def validate_ingredients(self, data):
         ingredients = self.initial_data.get('ingredients')
+
         if not ingredients:
             raise ValidationError('Необходим хотя бы 1 ингредиент')
         unique_ingredients = []
@@ -195,23 +199,33 @@ class RecipesWriteSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         ingredients = validated_data.pop('ingredients')
         tags = self.initial_data.get('tags')
-        cooking_time = validated_data.pop('cooking_time')
         author = serializers.CurrentUserDefault()(self)
         new_recipe = Recipe.objects.create(
-            author=author, cooking_time=cooking_time, **validated_data
+            author=author,
+            **validated_data,
         )
         new_recipe.tags.set(tags)
         self.add_ingredients(new_recipe, ingredients)
+
         return new_recipe
 
     def update(self, recipe, validated_data):
-        if 'ingredients' in validated_data:
-            ingredients = validated_data.pop('ingredients')
-            recipe.ingredients_amount.all().delete()
+        recipe.image = validated_data.get('image', recipe.image)
+        recipe.name = validated_data.get('name', recipe.name)
+        recipe.text = validated_data.get('text', recipe.text)
+        recipe.cooking_time = validated_data.get(
+            'cooking_time',
+            recipe.cooking_time,
+        )
+
+        recipe.ingredients_in_recipe.all().delete()
+        ingredients = validated_data.pop('ingredients')
+        with transaction.atomic():
             self.add_ingredients(recipe, ingredients)
-        tags = self.initial_data.pop('tags')
-        recipe.tags.set(tags)
-        return super().update(recipe, validated_data)
+
+        recipe.tags.set(validated_data.get('tags', recipe.tags.all()))
+
+        return recipe
 
 
 class FavoriteSerializer(serializers.ModelSerializer):
