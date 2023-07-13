@@ -36,7 +36,7 @@ class Command(BaseCommand):
             self.stdout.write(
                 self.style.ERROR(
                    'Возникла ошибка при импорте ингедиентов: {}'.format(
-                      str(error),
+                        str(error),
                     )
                 )
             )

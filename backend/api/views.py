@@ -132,7 +132,10 @@ class RecipesViewSet(viewsets.ModelViewSet):
             for numerate, ingr in enumerate(ingredients, 1)
         ]
 
-        shopping_list.insert(0, f'Количество ингедиентов: {ingr_count}\nСписок ингедиентов:\n\n')
+        shopping_list.insert(
+            0,
+            f'Количество ингедиентов: {ingr_count}\nСписок ингедиентов:\n\n',
+        )
         content = '\n'.join(shopping_list)
 
         response = HttpResponse(content,  content_type='text/plain')
