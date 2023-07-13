@@ -33,10 +33,8 @@ class Command(BaseCommand):
                 'Ингридиенты успешно импортированы.'
             ))
         except IntegrityError as error:
-            self.stdout.write(
-                self.style.ERROR(
-                   'Возникла ошибка при импорте ингедиентов: {}'.format(
-                        str(error),
-                    )
+            self.stdout.write(self.style.ERROR(
+                'Возникла ошибка при импорте ингедиентов: {}'.format(
+                    str(error),
                 )
-            )
+            ))

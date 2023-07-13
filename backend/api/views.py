@@ -138,7 +138,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
         )
         content = '\n'.join(shopping_list)
 
-        response = HttpResponse(content,  content_type='text/plain')
+        response = HttpResponse(content, content_type='text/plain')
         response['Content-Disposition'] = (
             f'attachment; '
             f'filename="{self.request.user.username} shopping list.txt"'
