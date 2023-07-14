@@ -1,3 +1,4 @@
+"""Обработчики приложения api."""
 from django.contrib.auth import get_user_model
 from django.db.models import Sum
 from django.http import HttpResponse
@@ -11,9 +12,9 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from api.filters import IngredientFilter, RecipeFilter
-from api.paginators import CustomPagination
-from api.permissions import IsAuthorOrReadOnly
+from core.filters.filters import IngredientFilter, RecipeFilter
+from core.pagination.paginators import CustomPagination
+from core.permissions.permissions import IsAuthorOrReadOnly
 from api.serializers import (
     FavoriteSerializer,
     FollowSerializer,
@@ -35,17 +36,23 @@ User = get_user_model()
 
 
 class RecipesViewSet(viewsets.ModelViewSet):
+    """Вьюсет для обработки запросов к рецептам."""
+
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
     permission_classes = (IsAuthorOrReadOnly,)
     pagination_class = CustomPagination
 
     def get_serializer_class(self):
+        """Метод опредления сериализатора в зависимости от запроса."""
+
         if self.action == 'favorite' or self.action == 'shopping_cart':
             return FavoriteSerializer
         return RecipesWriteSerializer
 
     def get_queryset(self):
+        """Метод для получения списка рецептов."""
+
         queryset = Recipe.objects.all()
         author = self.request.user
         if self.request.GET.get('is_favorited'):
@@ -64,6 +71,10 @@ class RecipesViewSet(viewsets.ModelViewSet):
         return queryset
 
     def add_in_list(self, model, user, pk):
+        """
+        Метод для добавления рецепта в список (избранное или список продуктов).
+        """
+
         if model.objects.filter(user=user, recipe__id=pk).exists():
             return Response(
                 {'errors': f'Рецепт уже добавлен в {model.__name__}'},
@@ -77,6 +88,10 @@ class RecipesViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def delete_in_list(self, model, user, pk):
+        """
+        Метод для удаления рецепта из списка (избранное или список продуктов).
+        """
+
         obj = model.objects.filter(user=user, recipe__id=pk)
         if obj.exists():
             obj.delete()
@@ -93,6 +108,10 @@ class RecipesViewSet(viewsets.ModelViewSet):
         permission_classes=(IsAuthenticated,),
     )
     def favorite(self, request, pk=None):
+        """
+        Метод для добавления или удаления рецепта в избранное.
+        """
+
         if request.method == 'POST':
             return self.add_in_list(FavoriteRecipeUser, request.user, pk)
         return self.delete_in_list(FavoriteRecipeUser, request.user, pk)
@@ -103,6 +122,10 @@ class RecipesViewSet(viewsets.ModelViewSet):
         permission_classes=(IsAuthenticated,),
     )
     def shopping_cart(self, request, pk=None):
+        """
+        Метод для добавления или удаления рецепта в список продуктов.
+        """
+
         if request.method == 'POST':
             return self.add_in_list(ShoppingCartUser, request.user, pk)
         return self.delete_in_list(ShoppingCartUser, request.user, pk)
@@ -113,6 +136,9 @@ class RecipesViewSet(viewsets.ModelViewSet):
         permission_classes=(IsAuthenticated,),
     )
     def download_shopping_cart(self, request):
+        """
+        Метод для скачивания списка продуктов в виде текстового файла.
+        """
 
         ingredients = request.user.shopping_carts.values(
             'recipe_id__ingr_in_recipe__ingredient__name',
@@ -148,13 +174,19 @@ class RecipesViewSet(viewsets.ModelViewSet):
 
 
 class TagsViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    Вьюсет для просмотра тегов рецептов.
+    """
+
     queryset = TagRecipe.objects.all()
     serializer_class = TagsSerializer
     pagination_class = None
 
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
-    """Вывод ингредиентов"""
+    """
+    Вьюсет для просмотра ингредиентов.
+    """
 
     serializer_class = IngredientSerializer
     queryset = Ingredient.objects.all()
@@ -165,9 +197,17 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class FollowUserView(APIView):
+    """
+    Представление для подписки на автора.
+    """
+
     permission_classes = (IsAuthenticated,)
 
     def post(self, request, id):
+        """
+        Метод для подписки на автора.
+        """
+
         author = get_object_or_404(User, id=id)
         if request.user.follower.filter(following=author).exists():
             return Response(
@@ -183,6 +223,10 @@ class FollowUserView(APIView):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def delete(self, request, id):
+        """
+        Метод для отмены подписки на автора.
+        """
+
         author = get_object_or_404(User, id=id)
         if request.user.follower.filter(following=author).exists():
             request.user.follower.filter(following=author).delete()
@@ -195,6 +239,10 @@ class FollowUserView(APIView):
 
 
 class SubscriptionsView(ListAPIView):
+    """
+    Представление для просмотра списка подписок.
+    """
+
     serializer_class = FollowSerializer
     pagination_class = LimitOffsetPagination
     permission_classes = (IsAuthenticated,)

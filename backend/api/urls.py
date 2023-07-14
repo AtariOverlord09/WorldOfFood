@@ -1,3 +1,4 @@
+"""URL конфигурация для приложения api."""
 from django.urls import include, path
 from rest_framework import routers
 

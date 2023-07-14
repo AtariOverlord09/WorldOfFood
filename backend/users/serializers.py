@@ -1,3 +1,4 @@
+"""Сериализатор для пользователя."""
 from django.contrib.auth import get_user_model
 from djoser.serializers import UserCreateSerializer
 from rest_framework import serializers
@@ -9,6 +10,8 @@ User = get_user_model()
 
 
 class CustomUserSerializer(UserCreateSerializer):
+    """Сериализатор для пользователя."""
+
     email = serializers.EmailField(
         validators=[UniqueValidator(queryset=User.objects.all())]
     )

@@ -1,4 +1,4 @@
-"""URL-роутинг приложения API."""
+"""URL конфигурация приложения users."""
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 

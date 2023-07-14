@@ -8,5 +8,7 @@ User = get_user_model()
 
 
 class CustomUserViewSet(UserViewSet):
+    """Вьюсет для работы с пользователями."""
+
     queryset = User.objects.all()
     serializer_class = CustomUserSerializer

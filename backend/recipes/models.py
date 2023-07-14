@@ -1,9 +1,9 @@
-"""Модели приложения recepies."""
+"""Модели приложения recipes."""
 from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
-from recipes.validators import ColorValidator
+from core.validators.validators import ColorValidator
 
 User = get_user_model()
 

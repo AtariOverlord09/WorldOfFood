@@ -1,3 +1,4 @@
+"""Сериализаторы приложения api."""
 from django.contrib.auth import get_user_model
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
@@ -19,6 +20,8 @@ User = get_user_model()
 
 
 class TagsSerializer(serializers.ModelSerializer):
+    """Сериализатор для тегов."""
+
     class Meta:
         model = TagRecipe
         fields = '__all__'
@@ -30,16 +33,25 @@ class TagsSerializer(serializers.ModelSerializer):
 
 
 class IngredientSerializer(serializers.ModelSerializer):
+    """Сериализатор для ингредиентов."""
+
     class Meta:
         model = Ingredient
         fields = '__all__'
 
 
 class RecipeIngredientWriteSerializer(serializers.Serializer):
+    """Сериализатор ввода для промежуточной таблицы ингредиентов и рецептов."""
+
     id = serializers.IntegerField()
     amount = serializers.IntegerField(write_only=True)
 
     def validate_amount(self, value):
+        """
+        Метод валидрует количество ингредиентов.
+        Он проверяет количество на ненулевое значение.
+        """
+
         if value < 1:
             raise serializers.ValidationError(
                 'Количество должно быть больше 1'
@@ -48,6 +60,11 @@ class RecipeIngredientWriteSerializer(serializers.Serializer):
 
 
 class RecipeIngredientReadSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор вывода для промежуточной
+    таблицы ингредиентов и рецептов.
+    """
+
     id = serializers.SerializerMethodField()
     name = serializers.SerializerMethodField(read_only=True)
     measurement_unit = serializers.SerializerMethodField(read_only=True)
@@ -57,16 +74,24 @@ class RecipeIngredientReadSerializer(serializers.ModelSerializer):
         model = IngredientRecipe
 
     def get_id(self, obj):
+        """Метод возвращает id ингедиента."""
+
         return obj.ingredient.id
 
     def get_name(self, obj):
+        """Метод возвращает имя ингедиента."""
+
         return obj.ingredient.name
 
     def get_measurement_unit(self, obj):
+        """Метод возвращает единицу измерения ингредиента."""
+
         return obj.ingredient.measurement_unit
 
 
 class RecipesReadSerializer(serializers.ModelSerializer):
+    """Сериализатор вывода рецептов."""
+
     tags = TagsSerializer(many=True)
     ingredients = serializers.SerializerMethodField()
     author = CustomUserSerializer()
@@ -101,15 +126,24 @@ class RecipesReadSerializer(serializers.ModelSerializer):
         ]
 
     def get_image(self, obj):
+        """Возвращает url фото рецепта."""
+
         return obj.image.url
 
     def get_ingredients(self, obj):
+        """Возвращает сериализованные данные ингредиентов рецепта."""
+
         return RecipeIngredientReadSerializer(
             obj.ingr_in_recipe.all(),
             many=True,
         ).data
 
     def get_is_favorited(self, obj):
+        """
+        Находит и возвращает значение флажка
+        добавления рецепта в избранное.
+        """
+
         request = self.context.get('request')
         if request.user.is_anonymous:
             return False
@@ -119,6 +153,11 @@ class RecipesReadSerializer(serializers.ModelSerializer):
         ).exists()
 
     def get_is_in_shopping_cart(self, obj):
+        """
+        Находит и возвращает значение флажка
+        добавления рецепта в список продуктов.
+        """
+
         request = self.context.get('request')
         if request.user.is_anonymous:
             return False
@@ -128,6 +167,11 @@ class RecipesReadSerializer(serializers.ModelSerializer):
         ).exists()
 
     def get_is_subscribed(self, obj):
+        """
+        Проверяет подписку пользователя на автора рецепта
+        и возвращает значение флажка.
+        """
+
         request = self.context.get('request')
         is_following = Follow.objects.filter(
             follower=request.user,
@@ -138,6 +182,8 @@ class RecipesReadSerializer(serializers.ModelSerializer):
 
 
 class RecipesWriteSerializer(serializers.ModelSerializer):
+    """Сериализатор ввода рецетов"""
+
     tags = TagsSerializer(many=True, read_only=True)
     ingredients = RecipeIngredientWriteSerializer(many=True)
     author = CustomUserSerializer(
@@ -159,10 +205,14 @@ class RecipesWriteSerializer(serializers.ModelSerializer):
         )
 
     def to_representation(self, instance):
+        """Метод для вывода сериализованных данных рецепта."""
+
         serializer = RecipesReadSerializer(instance, context=self.context)
         return serializer.data
 
     def add_ingredients(self, recipe, ingredients):
+        """Метод для добавления ингредиентов в рецепт."""
+
         for ingr in ingredients:
             ingredient_id = ingr.get('id')
             amount = ingr.get('amount')
@@ -178,6 +228,8 @@ class RecipesWriteSerializer(serializers.ModelSerializer):
                 ingredient_recipe.save()
 
     def validate_ingredients(self, data):
+        """Метод для валидации ингедиентов рецепта."""
+
         ingredients = self.initial_data.get('ingredients')
 
         if not ingredients:
@@ -192,12 +244,16 @@ class RecipesWriteSerializer(serializers.ModelSerializer):
         return data
 
     def validate_cooking_time(self, data):
+        """Метод для валидации времени приготовления для рецепта."""
+
         cooking_time = self.initial_data.get('cooking_time')
         if int(cooking_time) < 1:
             raise ValidationError('Время приготовления должно быть больше 0')
         return data
 
     def create(self, validated_data):
+        """Метод для создания рецепта с ингредиентами и тегами."""
+
         ingredients = validated_data.pop('ingredients')
         tags = self.initial_data.get('tags')
         author = serializers.CurrentUserDefault()(self)
@@ -211,6 +267,8 @@ class RecipesWriteSerializer(serializers.ModelSerializer):
         return new_recipe
 
     def update(self, recipe, validated_data):
+        """Метод обновления рецепта."""
+
         recipe.image = validated_data.get('image', recipe.image)
         recipe.name = validated_data.get('name', recipe.name)
         recipe.text = validated_data.get('text', recipe.text)
@@ -229,20 +287,29 @@ class RecipesWriteSerializer(serializers.ModelSerializer):
         return recipe
 
 
-class FavoriteSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = FavoriteRecipeUser
-        fields = ('id',)
-
-
 class RecipeListSerializer(serializers.ModelSerializer):
+    """Сериализатор списка рецептов."""
+
     class Meta:
         model = Recipe
         fields = ('id', 'name', 'image', 'cooking_time')
 
 
+class FavoriteSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для промежуточной модели рецептов
+    в избранном пользователя.
+    """
+
+    class Meta:
+        model = FavoriteRecipeUser
+        fields = ('id',)
+
+
 class FollowRecipeSerializer(serializers.ModelSerializer):
-    image = Base64ImageField()
+    """Сериализатор для рецептов авторов на которых подписан пользователь."""
+
+    image = Base64ImageField(max_length=None, use_url=True)
 
     class Meta:
         model = Recipe
@@ -255,6 +322,8 @@ class FollowRecipeSerializer(serializers.ModelSerializer):
 
 
 class FollowSerializer(serializers.ModelSerializer):
+    """Сериализатор для подписки."""
+
     email = serializers.ReadOnlyField(source='following.email')
     id = serializers.ReadOnlyField(source='following.id')
     username = serializers.ReadOnlyField(source='following.username')
@@ -278,9 +347,16 @@ class FollowSerializer(serializers.ModelSerializer):
         )
 
     def get_is_subscribed(self, obj):
+        """
+        Проверяет подписан ли пользователь на автора
+        и возвращает результат проверки.
+        """
+
         return obj.follower.follower.filter(following=obj.following).exists()
 
     def get_recipes(self, obj):
+        """Возвращает рецепты авторов на которых пописан пользователь."""
+
         queryset = obj.following.recipes.all().order_by('-pub_date')
         limit = self.context.get('request').query_params.get('recipes_limit')
         if limit:
@@ -291,4 +367,6 @@ class FollowSerializer(serializers.ModelSerializer):
         return FollowRecipeSerializer(queryset, many=True).data
 
     def get_recipes_count(self, obj):
+        """Возвращает количество рецептов."""
+
         return obj.following.recipes.all().count()
