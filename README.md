@@ -25,20 +25,11 @@ ALLOWED_HOSTS=localhost,host,127.0.0.1,
 SECRET_KEY=django_key
 ```
 
-5.Запустить контейнер backend:
+4.Запустить контейнер backend:
 ```
 docker run --name foodgram_backend_container --rm -p 8000:8000 --env-file .env foodgram_backend
 ```
 
-4.Создание образа frontend-приложения командой:
-```
-docker build -t foodgram_frontend . 
-```
-
-5.Запуск контейнера:
-```
-docker run --rm -it -p 8000:8000 --name foodgram_frontend_test foodgram_frontend
-```
 
 Автор: 
 AtariOverlord09

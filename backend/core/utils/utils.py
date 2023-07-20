@@ -46,9 +46,9 @@ def preparation_shopping_list(request):
     """Метод для подготовки списка продуктов пользователя."""
 
     ingredients = request.user.shopping_carts.values(
-            'recipe_id__ingredients_in_recipe__ingredient__name',
-            'recipe_id__ingredients_in_recipe__ingredient__measurement_unit',
-        ).annotate(amount=Sum('recipe_id__ingredients_in_recipe__amount'))
+        'recipe_id__ingredients_in_recipe__ingredient__name',
+        'recipe_id__ingredients_in_recipe__ingredient__measurement_unit',
+    ).annotate(amount=Sum('recipe_id__ingredients_in_recipe__amount'))
 
     ingredient_count = ingredients.count()
     shopping_list = [
@@ -58,10 +58,13 @@ def preparation_shopping_list(request):
     shopping_list += [
         '{number}) {name} - {amount} ({unit})\n'.format(
             number=numerate,
-            name=ingredient['recipe_id__ingredients_in_recipe__ingredient__name'],
+            name=ingredient[
+                'recipe_id__ingredients_in_recipe__ingredient__name'
+            ],
             amount=ingredient['amount'],
             unit=ingredient[
-                'recipe_id__ingredients_in_recipe__ingredient__measurement_unit'
+                'recipe_id__ingredients_in_recipe'
+                '__ingredient__measurement_unit'
             ]
         )
         for numerate, ingredient in enumerate(ingredients, 1)

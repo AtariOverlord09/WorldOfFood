@@ -63,7 +63,7 @@ class RecipeIngredientReadSerializer(serializers.ModelSerializer):
     """
     Сериализатор вывода для промежуточной
     таблицы ингредиентов и рецептов.
-    """ 
+    """
 
     id = serializers.IntegerField(source='ingredient.id', read_only=True)
     name = serializers.CharField(source='ingredient.name', read_only=True)
