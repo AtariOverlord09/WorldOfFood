@@ -63,30 +63,18 @@ class RecipeIngredientReadSerializer(serializers.ModelSerializer):
     """
     Сериализатор вывода для промежуточной
     таблицы ингредиентов и рецептов.
-    """
+    """ 
 
-    id = serializers.SerializerMethodField()
-    name = serializers.SerializerMethodField(read_only=True)
-    measurement_unit = serializers.SerializerMethodField(read_only=True)
+    id = serializers.IntegerField(source='ingredient.id', read_only=True)
+    name = serializers.CharField(source='ingredient.name', read_only=True)
+    measurement_unit = serializers.CharField(
+        source='ingredient.measurement_unit',
+        read_only=True,
+    )
 
     class Meta:
         fields = ('id', 'name', 'amount', 'measurement_unit')
         model = IngredientRecipe
-
-    def get_id(self, obj):
-        """Метод возвращает id ингедиента."""
-
-        return obj.ingredient.id
-
-    def get_name(self, obj):
-        """Метод возвращает имя ингедиента."""
-
-        return obj.ingredient.name
-
-    def get_measurement_unit(self, obj):
-        """Метод возвращает единицу измерения ингредиента."""
-
-        return obj.ingredient.measurement_unit
 
 
 class RecipesReadSerializer(serializers.ModelSerializer):
@@ -125,16 +113,11 @@ class RecipesReadSerializer(serializers.ModelSerializer):
             'cooking_time',
         ]
 
-    def get_image(self, obj):
-        """Возвращает url фото рецепта."""
-
-        return obj.image.url
-
     def get_ingredients(self, obj):
         """Возвращает сериализованные данные ингредиентов рецепта."""
 
         return RecipeIngredientReadSerializer(
-            obj.ingr_in_recipe.all(),
+            obj.ingredients_in_recipe.all(),
             many=True,
         ).data
 
@@ -173,6 +156,8 @@ class RecipesReadSerializer(serializers.ModelSerializer):
         """
 
         request = self.context.get('request')
+        if request.user.is_anonymous:
+            return False
         is_following = Follow.objects.filter(
             follower=request.user,
             following=obj.author,
@@ -210,12 +195,12 @@ class RecipesWriteSerializer(serializers.ModelSerializer):
         serializer = RecipesReadSerializer(instance, context=self.context)
         return serializer.data
 
-    def add_ingredients(self, recipe, ingredients):
+    def _add_ingredients(self, recipe, ingredients):
         """Метод для добавления ингредиентов в рецепт."""
 
-        for ingr in ingredients:
-            ingredient_id = ingr.get('id')
-            amount = ingr.get('amount')
+        for ingredient in ingredients:
+            ingredient_id = ingredient.get('id')
+            amount = ingredient.get('amount')
             ingredient_recipe, created = (
                 IngredientRecipe.objects.get_or_create(
                     recipe=recipe,
@@ -234,13 +219,15 @@ class RecipesWriteSerializer(serializers.ModelSerializer):
 
         if not ingredients:
             raise ValidationError('Необходим хотя бы 1 ингредиент')
+
         unique_ingredients = []
         for ingredient in ingredients:
-            ingr_id = ingredient['id']
-            if ingr_id not in unique_ingredients:
-                unique_ingredients.append(ingr_id)
-            else:
+            ingredient_id = ingredient['id']
+
+            if ingredient_id in unique_ingredients:
                 raise ValidationError('Повторный ингредиент недопустим')
+            unique_ingredients.append(ingredient_id)
+
         return data
 
     def validate_cooking_time(self, data):
@@ -262,26 +249,20 @@ class RecipesWriteSerializer(serializers.ModelSerializer):
             **validated_data,
         )
         new_recipe.tags.set(tags)
-        self.add_ingredients(new_recipe, ingredients)
+        self._add_ingredients(new_recipe, ingredients)
 
         return new_recipe
 
     def update(self, recipe, validated_data):
         """Метод обновления рецепта."""
 
-        recipe.image = validated_data.get('image', recipe.image)
-        recipe.name = validated_data.get('name', recipe.name)
-        recipe.text = validated_data.get('text', recipe.text)
-        recipe.cooking_time = validated_data.get(
-            'cooking_time',
-            recipe.cooking_time,
-        )
+        super().update(recipe, validated_data)
 
-        recipe.ingr_in_recipe.all().delete()
+        recipe.ingredients_in_recipe.all().delete()
         ingredients = validated_data.pop('ingredients')
-        with transaction.atomic():
-            self.add_ingredients(recipe, ingredients)
 
+        with transaction.atomic():
+            self._add_ingredients(recipe, ingredients)
         recipe.tags.set(validated_data.get('tags', recipe.tags.all()))
 
         return recipe
@@ -360,10 +341,8 @@ class FollowSerializer(serializers.ModelSerializer):
         queryset = obj.following.recipes.all().order_by('-pub_date')
         limit = self.context.get('request').query_params.get('recipes_limit')
         if limit:
-            try:
-                queryset = queryset[: int(limit)]
-            except ValueError:
-                raise ValueError('Неверно задан параметр количества рецептов')
+            queryset = queryset[: int(limit)]
+
         return FollowRecipeSerializer(queryset, many=True).data
 
     def get_recipes_count(self, obj):

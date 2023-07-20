@@ -1,11 +1,11 @@
-"""Миграция данных для модели Ingredient."""
+"""Импорт данных."""
 import csv
 
 from django.db import migrations
 
 
 def import_data(apps, schema_editor):
-    """Метод для импорта данных из csv файла."""
+    """Дата миграция для ингредиентов."""
 
     Ingredient = apps.get_model('recipes', 'Ingredient')
     with open('../data/ingredients.csv', 'r', encoding='utf-8') as file:
@@ -21,7 +21,7 @@ def import_data(apps, schema_editor):
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("recipes", "0002_alter_ingredientrecipe_ingredient_and_more"),
+        ("recipes", "0001_initial"),
     ]
 
     operations = [

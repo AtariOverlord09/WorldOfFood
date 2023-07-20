@@ -1,6 +1,6 @@
 """Обработчики приложения api."""
 from django.contrib.auth import get_user_model
-from django.db.models import Sum
+from django.db.models import Sum, Q
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
@@ -15,6 +15,7 @@ from rest_framework.views import APIView
 from core.filters.filters import IngredientFilter, RecipeFilter
 from core.pagination.paginators import CustomPagination
 from core.permissions.permissions import IsAuthorOrReadOnly
+from core.utils.utils import ResponseUtil, preparation_shopping_list
 from api.serializers import (
     FavoriteSerializer,
     FollowSerializer,
@@ -46,7 +47,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         """Метод опредления сериализатора в зависимости от запроса."""
 
-        if self.action == 'favorite' or self.action == 'shopping_cart':
+        if self.action in ('favorite', 'shopping_cart'):
             return FavoriteSerializer
         return RecipesWriteSerializer
 
@@ -56,17 +57,14 @@ class RecipesViewSet(viewsets.ModelViewSet):
         queryset = Recipe.objects.all()
         author = self.request.user
         if self.request.GET.get('is_favorited'):
-            favorite_recipes_ids = FavoriteRecipeUser.objects.filter(
-                user=author,
-            ).values('recipe_id')
-
-            return queryset.filter(pk__in=favorite_recipes_ids)
+            return Recipe.objects.filter(
+                in_favorite__user=author.id,
+            )
 
         if self.request.GET.get('is_in_shopping_cart'):
-            cart_recipes_ids = ShoppingCartUser.objects.filter(
-                user=author,
-            ).values('recipe_id')
-            return queryset.filter(pk__in=cart_recipes_ids)
+            return Recipe.objects.filter(
+                recipes_in_shopping_cart__user=author,
+            )
 
         return queryset
 
@@ -75,32 +73,43 @@ class RecipesViewSet(viewsets.ModelViewSet):
         Метод для добавления рецепта в список (избранное или список продуктов).
         """
 
+        response = ResponseUtil()
+
         if model.objects.filter(user=user, recipe__id=pk).exists():
-            return Response(
-                {'errors': f'Рецепт уже добавлен в {model.__name__}'},
-                status=status.HTTP_400_BAD_REQUEST,
+            return response.errors_processing(
+                model=model,
+                action='add_error',
             )
 
         recipe = get_object_or_404(Recipe, pk=pk)
         model.objects.create(user=user, recipe=recipe)
         serializer = RecipeListSerializer(recipe)
 
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return response.get_response(
+            data=serializer.data,
+            model=model,
+            action='add',
+        )
 
     def delete_in_list(self, model, user, pk):
         """
         Метод для удаления рецепта из списка (избранное или список продуктов).
         """
 
-        obj = model.objects.filter(user=user, recipe__id=pk)
-        if obj.exists():
-            obj.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
+        response = ResponseUtil()
 
-        return Response(
-            {'errors': f'Рецепт не добавлен в {model.__name__}'},
-            status=status.HTTP_400_BAD_REQUEST,
+        obj_queryset = model.objects.filter(
+            user=user,
+            recipe__id=pk,
         )
+        num_deleted = obj_queryset.delete()[0]
+
+        if num_deleted == 0:
+            return response.errors_processing(
+                model=model,
+                action='delete_error',
+            )
+        return response.get_response(model, action='delete')
 
     @action(
         methods=['post', 'delete'],
@@ -140,33 +149,11 @@ class RecipesViewSet(viewsets.ModelViewSet):
         Метод для скачивания списка продуктов в виде текстового файла.
         """
 
-        ingredients = request.user.shopping_carts.values(
-            'recipe_id__ingr_in_recipe__ingredient__name',
-            'recipe_id__ingr_in_recipe__ingredient__measurement_unit',
-        ).annotate(amount=Sum('recipe_id__ingr_in_recipe__amount'))
+        shopping_list = preparation_shopping_list(request=request)
 
-        ingr_count = ingredients.count()
-        shopping_list = [
-            '{}) {} - {} ({})\n'.format(
-                numerate,
-                ingr['recipe_id__ingr_in_recipe__ingredient__name'],
-                ingr['amount'],
-                ingr[
-                    'recipe_id__ingr_in_recipe__ingredient__measurement_unit'
-                ]
-            )
-            for numerate, ingr in enumerate(ingredients, 1)
-        ]
-
-        shopping_list.insert(
-            0,
-            f'Количество ингедиентов: {ingr_count}\nСписок ингедиентов:\n\n',
-        )
-        content = '\n'.join(shopping_list)
-
-        response = HttpResponse(content, content_type='text/plain')
+        response = HttpResponse(shopping_list, content_type='text/plain')
         response['Content-Disposition'] = (
-            f'attachment; '
+            'attachment; '
             f'filename="{self.request.user.username} shopping list.txt"'
         )
 
@@ -228,8 +215,7 @@ class FollowUserView(APIView):
         """
 
         author = get_object_or_404(User, id=id)
-        if request.user.follower.filter(following=author).exists():
-            request.user.follower.filter(following=author).delete()
+        if request.user.follower.filter(following=author).delete()[0] > 0:
             return Response(status=status.HTTP_204_NO_CONTENT)
 
         return Response(

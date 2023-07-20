@@ -2,21 +2,18 @@
 import os
 from pathlib import Path
 
-from dotenv import load_dotenv
-
-load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-DJANGO_KEY = os.getenv("SECRET_KEY")
+DJANGO_KEY = os.environ.get("SECRET_KEY")
 SECRET_KEY = DJANGO_KEY
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+HOSTS = os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
 ALLOWED_HOSTS = HOSTS
 
 
@@ -29,16 +26,17 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "users.apps.UsersConfig",
-    "recipes.apps.RecipesConfig",
-    "core.apps.CoreConfig",
-    "api.apps.ApiConfig",
     "rest_framework",
     "rest_framework.authtoken",
     "djoser",
     "django_filters",
     "corsheaders",
     "django_extensions",
+
+    "users.apps.UsersConfig",
+    "recipes.apps.RecipesConfig",
+    "core.apps.CoreConfig",
+    "api.apps.ApiConfig",
 ]
 
 MIDDLEWARE = [
@@ -82,24 +80,14 @@ TEMPLATES = [
 WSGI_APPLICATION = "foodgram.wsgi.application"
 
 
-# Database
-# https://docs.djangoproject.com/en/4.2/ref/settings/#databases
-
-#DATABASES = {
-#    "default": {
-#        "ENGINE": "django.db.backends.sqlite3",
-#        "NAME": BASE_DIR / "db.sqlite3",
-#    }
-#}
-
 DATABASE = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('POSTGRES_DB', 'foodgram_db'),
-        'USER': os.getenv('POSTGRES_USER', 'foodgram_user'),
-        'PASSWORD': os.getenv('POSTGRES_PASSWORD', ''),
-        'HOST': os.getenv('DB_HOST', ''),
-        'PORT': os.getenv('DB_PORT', 5432)
+        'NAME': os.environ.get('POSTGRES_DB', 'foodgram_db'),
+        'USER': os.environ.get('POSTGRES_USER', 'foodgram_user'),
+        'PASSWORD': os.environ.get('POSTGRES_PASSWORD', ''),
+        'HOST': os.environ.get('DB_HOST', ''),
+        'PORT': os.environ.get('DB_PORT', 5432)
     }
 }
 
@@ -187,12 +175,6 @@ DJOSER = {
     },
 }
 
-STATIC_URL = "/static/"
-STATIC_ROOT = os.path.join(BASE_DIR, "static")
-
-MEDIA_URL = "/media/"
-MEDIA_ROOT = os.path.join(BASE_DIR, "media")
-
 
 REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": (
@@ -206,3 +188,5 @@ REST_FRAMEWORK = {
         "rest_framework.authentication.TokenAuthentication",
     ],
 }
+
+PAGE_SIZE = 6

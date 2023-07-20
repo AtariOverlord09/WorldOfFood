@@ -68,7 +68,7 @@ class Recipe(models.Model):
     )
     name = models.CharField(max_length=200, verbose_name='Название')
     text = models.TextField(verbose_name='Описание')
-    cooking_time = models.IntegerField(
+    cooking_time = models.PositiveIntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(1000)],
         verbose_name='Время приготовления (в минутах)',
     )
@@ -77,19 +77,19 @@ class Recipe(models.Model):
         verbose_name='Дата публикации',
     )
 
+    class Meta:
+        ordering = ('-pub_date',)
+        verbose_name = 'Рецепт'
+        verbose_name_plural = 'Рецепты'
+
+    def __str__(self):
+        return self.name
+
     @property
     def get_favorite_count(self):
         """Считает количество добавлений рецепта в избранное."""
 
         return FavoriteRecipeUser.objects.filter(recipe=self).count()
-
-    def __str__(self):
-        return self.name
-
-    class Meta:
-        ordering = ('-pub_date',)
-        verbose_name = 'Рецепт'
-        verbose_name_plural = 'Рецепты'
 
 
 class IngredientRecipe(models.Model):
@@ -104,12 +104,12 @@ class IngredientRecipe(models.Model):
     )
     recipe = models.ForeignKey(
         Recipe,
-        related_name='ingr_in_recipe',
+        related_name='ingredients_in_recipe',
         on_delete=models.SET_NULL,
         verbose_name='Рецепт',
         null=True,
     )
-    amount = models.IntegerField(verbose_name='Количество')
+    amount = models.PositiveIntegerField(verbose_name='Количество')
 
     class Meta:
         verbose_name = 'Ингредиент рецепта'

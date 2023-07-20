@@ -22,9 +22,6 @@ class Follow(models.Model):
         verbose_name='автор',
     )
 
-    def __str__(self):
-        return f'{self.follower} подписан на {self.following}'
-
     class Meta:
         verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'
@@ -38,3 +35,6 @@ class Follow(models.Model):
                 check=~models.Q(follower=models.F('following')),
             ),
         ]
+
+    def __str__(self):
+        return f'{self.follower} подписан на {self.following}'

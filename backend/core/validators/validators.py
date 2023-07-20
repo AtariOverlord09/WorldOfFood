@@ -1,7 +1,12 @@
 """Валидаторы приложения recipe."""
+import re
+
 from django.core.validators import RegexValidator
 
 
 class ColorValidator(RegexValidator):
-    regex = '^#([A-Fa-f0-9]{3,6})$'
+    """Валидатор цвета."""
+
+    regex = r'^#([A-F\d]{3,6})$'
     message = 'Введенное значение не является HEX-кодом!'
+    flags = re.I
