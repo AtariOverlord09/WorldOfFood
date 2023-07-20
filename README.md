@@ -12,7 +12,7 @@ git clone https://github.com/AtariOverlord09/kittygram_final.git
 
 2.Для создания образа backend выполнить команду:
 ```
-docker build -t taski_backend . 
+docker build -t foodgram_backend . 
 ```
 
 3.Заполнить .env файл по формату env.example:
@@ -27,7 +27,7 @@ SECRET_KEY=django_key
 
 5.Запустить контейнер backend:
 ```
-docker run --name foodgram_backend_container --rm -p 8000:8000 foodgram_backend
+docker run --name foodgram_backend_container --rm -p 8000:8000 --env-file .env foodgram_backend
 ```
 
 4.Создание образа frontend-приложения командой:
