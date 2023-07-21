@@ -11,10 +11,10 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from core.filters.filters import IngredientFilter, RecipeFilter
+from api.filters.filters import IngredientFilter, RecipeFilter
 from core.pagination.paginators import CustomPagination
 from core.permissions.permissions import IsAuthorOrReadOnly
-from core.utils.utils import ResponseUtil, preparation_shopping_list
+from core.utils.utils import get_response, preparation_shopping_list
 from api.serializers import (
     FavoriteSerializer,
     FollowSerializer,
@@ -67,49 +67,6 @@ class RecipesViewSet(viewsets.ModelViewSet):
 
         return queryset
 
-    def add_in_list(self, model, user, pk):
-        """
-        Метод для добавления рецепта в список (избранное или список продуктов).
-        """
-
-        response = ResponseUtil()
-
-        if model.objects.filter(user=user, recipe__id=pk).exists():
-            return response.errors_processing(
-                model=model,
-                action='add_error',
-            )
-
-        recipe = get_object_or_404(Recipe, pk=pk)
-        model.objects.create(user=user, recipe=recipe)
-        serializer = RecipeListSerializer(recipe)
-
-        return response.get_response(
-            data=serializer.data,
-            model=model,
-            action='add',
-        )
-
-    def delete_in_list(self, model, user, pk):
-        """
-        Метод для удаления рецепта из списка (избранное или список продуктов).
-        """
-
-        response = ResponseUtil()
-
-        obj_queryset = model.objects.filter(
-            user=user,
-            recipe__id=pk,
-        )
-        num_deleted = obj_queryset.delete()[0]
-
-        if num_deleted == 0:
-            return response.errors_processing(
-                model=model,
-                action='delete_error',
-            )
-        return response.get_response(model, action='delete')
-
     @action(
         methods=['post', 'delete'],
         detail=True,
@@ -119,10 +76,14 @@ class RecipesViewSet(viewsets.ModelViewSet):
         """
         Метод для добавления или удаления рецепта в избранное.
         """
-
-        if request.method == 'POST':
-            return self.add_in_list(FavoriteRecipeUser, request.user, pk)
-        return self.delete_in_list(FavoriteRecipeUser, request.user, pk)
+        return get_response(
+            Recipe,
+            FavoriteRecipeUser,
+            request.user,
+            pk,
+            request.method,
+            RecipeListSerializer,
+        )
 
     @action(
         methods=('post', 'delete'),
@@ -134,9 +95,14 @@ class RecipesViewSet(viewsets.ModelViewSet):
         Метод для добавления или удаления рецепта в список продуктов.
         """
 
-        if request.method == 'POST':
-            return self.add_in_list(ShoppingCartUser, request.user, pk)
-        return self.delete_in_list(ShoppingCartUser, request.user, pk)
+        return get_response(
+            Recipe,
+            ShoppingCartUser,
+            request.user,
+            pk,
+            request.method,
+            RecipeListSerializer,
+        )
 
     @action(
         methods=('GET', ),

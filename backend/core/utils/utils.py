@@ -1,45 +1,77 @@
 """Общие функции и утилиты."""
+from django.db.models import Sum
+from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.response import Response
-from django.db.models import Sum
+
+from core.exceptions.exceptions import AddingError, DeleteError
 
 
-class ResponseUtil:
-    """Утилита для ответа клиенту."""
+def add_or_delete_in_list(
+        search_model,
+        model,
+        user,
+        pk,
+        request_method,
+        serializer,
+):
+    """
+    Метод для добавления рецепта в список (избранное или список продуктов).
+    """
 
-    @staticmethod
-    def errors_processing(model, action):
-        """Метод для обработки ошибок."""
+    obj_queryset = model.objects.filter(
+        user=user,
+        recipe__id=pk,
+    )
 
-        if action == 'add_error':
-            error_message = f'Рецепт уже добавлен в {model.__name__}'
-        elif action == 'delete_error':
-            error_message = f'Рецепт еще не добавлен в {model.__name__}'
-        else:
-            error_message = 'Неподдерживаемое действие'
+    if request_method == 'POST':
+        if obj_queryset:
+            raise AddingError(
+                expression=model.__name__,
+                message='Объект уже существует.',
+            )
 
+        recipe = get_object_or_404(search_model, pk=pk)
+        model.objects.create(user=user, recipe=recipe)
+        serializer = serializer(recipe)
+
+        return serializer.data
+
+    num_deleted, _ = obj_queryset.delete()
+    if num_deleted == 0:
+        raise DeleteError(
+            expression=model.__name__,
+            message='Объект ещё не добавлен.',
+        )
+
+    return None
+
+
+def get_response(search_model, model, user, pk, method, serializer):
+
+    try:
+        obj_data = add_or_delete_in_list(
+            search_model,
+            model,
+            user,
+            pk,
+            method,
+            serializer,
+        )
+
+    except (AddingError, DeleteError) as error:
         return Response(
-            {'error': error_message},
+            {'error': str(error)},
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    @staticmethod
-    def get_response(model, action, data=None):
-        """
-        Метод для формирования ответа на добавление рецепта в список.
-        """
+    if obj_data:
+        return Response(
+            obj_data,
+            status=status.HTTP_201_CREATED,
+        )
 
-        if action == 'add':
-            return Response(data, status=status.HTTP_201_CREATED)
-
-        elif action == 'delete':
-            return Response(status=status.HTTP_204_NO_CONTENT)
-
-        else:
-            return ResponseUtil.errors_processing(
-                model,
-                action='response_error',
-            )
+    return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 def preparation_shopping_list(request):

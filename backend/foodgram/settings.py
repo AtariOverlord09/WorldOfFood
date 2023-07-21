@@ -80,7 +80,7 @@ TEMPLATES = [
 WSGI_APPLICATION = "foodgram.wsgi.application"
 
 
-DATABASE = {
+DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': os.environ.get('POSTGRES_DB', 'foodgram_db'),
@@ -90,7 +90,6 @@ DATABASE = {
         'PORT': os.environ.get('DB_PORT', 5432)
     }
 }
-
 
 AUTH_PASSWORD_VALIDATORS = [
     {
