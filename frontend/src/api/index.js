@@ -132,7 +132,7 @@ class Api {
     const token = localStorage.getItem('token')
     const authorization = token ? { 'authorization': `Token ${token}` } : {}
     return fetch(
-       +`/api/recipes/${recipe_id}/`,
+      `/api/recipes/${recipe_id}/`,
       {
         method: 'GET',
         headers: {
@@ -220,7 +220,7 @@ class Api {
   removeFromFavorites ({ id }) {
     const token = localStorage.getItem('token')
     return fetch(
-       +`/api/recipes/${id}/favorite/`,
+      `/api/recipes/${id}/favorite/`,
       {
         method: 'DELETE',
         headers: {
@@ -360,7 +360,7 @@ class Api {
   removeFromOrders ({ id }) {
     const token = localStorage.getItem('token')
     return fetch(
-       +`/api/recipes/${id}/shopping_cart/`,
+      `/api/recipes/${id}/shopping_cart/`,
       {
         method: 'DELETE',
         headers: {
@@ -400,4 +400,4 @@ class Api {
   }
 }
 
-export default new Api('http://localhost', { 'content-type': 'application/json' })
+export default new Api(process.env.API_URL || 'http://localhost', { 'content-type': 'application/json' })

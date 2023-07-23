@@ -86,7 +86,7 @@ DATABASES = {
         'NAME': os.environ.get('POSTGRES_DB', 'foodgram_db'),
         'USER': os.environ.get('POSTGRES_USER', 'foodgram_user'),
         'PASSWORD': os.environ.get('POSTGRES_PASSWORD', ''),
-        'HOST': os.environ.get('DB_HOST', ''),
+        'HOST': os.environ.get('DB_HOST', 'db'),
         'PORT': os.environ.get('DB_PORT', 5432)
     }
 }

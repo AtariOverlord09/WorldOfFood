@@ -8,7 +8,7 @@ def import_data(apps, schema_editor):
     """Дата миграция для ингредиентов."""
 
     Ingredient = apps.get_model('recipes', 'Ingredient')
-    with open('../data/ingredients.csv', 'r', encoding='utf-8') as file:
+    with open('/app/data/ingredients.csv', 'r', encoding='utf-8') as file:
         reader = csv.reader(file)
         for row in reader:
             name, measurement_unit = row[0], row[1]
