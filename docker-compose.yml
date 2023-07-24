@@ -34,7 +34,7 @@ services:
     build: ./infra/
     env_file: .env
     ports:
-      - 9000:80
+      - 80:80
     volumes:
       - static_volume:/static
       - media_volume:/media
