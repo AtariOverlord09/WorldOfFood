@@ -7,13 +7,14 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-DJANGO_KEY = os.environ.get("SECRET_KEY")
+DJANGO_KEY = os.getenv("SECRET_KEY")
 SECRET_KEY = DJANGO_KEY
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-HOSTS = os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+HOSTS = (os.getenv("ALLOWED_HOSTS"),)
+print(HOSTS)
 ALLOWED_HOSTS = HOSTS
 
 
