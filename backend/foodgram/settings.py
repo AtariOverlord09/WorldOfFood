@@ -11,7 +11,7 @@ DJANGO_KEY = os.environ.get("SECRET_KEY")
 SECRET_KEY = DJANGO_KEY
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 HOSTS = os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
 ALLOWED_HOSTS = HOSTS
@@ -58,7 +58,6 @@ CORS_ALLOWED_METHODS = [
     "PUT",
 ]
 
-CORS_ALLOW_ALL_ORIGINS = True
 ROOT_URLCONF = "foodgram.urls"
 
 TEMPLATES = [
