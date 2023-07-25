@@ -5,6 +5,8 @@
 
 ## Как запустить проект на локальном компьютере?
 
+
+## in process...
 1.Склонировать репозиторий на локальный компьютер:
 ```
 git clone https://github.com/AtariOverlord09/kittygram_final.git
