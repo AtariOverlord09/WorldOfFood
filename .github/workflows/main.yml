@@ -104,7 +104,7 @@ jobs:
           sudo docker compose -f docker-compose.yml down
           sudo docker compose -f docker-compose.yml up -d
           # Выполняет переброс статики
-          sudo docker compose -f docker-compose.yml exec backend cp -r /app/collected_static/. /backend_static/static/
+          sudo docker compose -f docker-compose.yml exec -it backend cp -r /collected_static/. /backend_static/static/
 
   send_message:
 
