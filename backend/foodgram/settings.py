@@ -11,9 +11,9 @@ DJANGO_KEY = os.getenv("SECRET_KEY")
 SECRET_KEY = DJANGO_KEY
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
-HOSTS = (os.getenv("ALLOWED_HOSTS"),)
+HOSTS = os.getenv("ALLOWED_HOSTS").split(',')
 ALLOWED_HOSTS = HOSTS
 
 
