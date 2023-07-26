@@ -11,7 +11,7 @@ DJANGO_KEY = os.getenv("SECRET_KEY")
 SECRET_KEY = DJANGO_KEY
 
 # SECURITY WARNING: don't rudn with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 HOSTS = os.getenv("ALLOWED_HOSTS").split(',')
 ALLOWED_HOSTS = HOSTS
