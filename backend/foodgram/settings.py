@@ -16,7 +16,6 @@ DEBUG = True
 HOSTS = os.getenv("ALLOWED_HOSTS").split(',')
 ALLOWED_HOSTS = HOSTS
 
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -49,6 +48,8 @@ MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
+
+CSRF_TRUSTED_ORIGINS = ["https://foodgram-bro.ddns.net"]
 
 CORS_ALLOWED_ORIGINS = [
     "https://foodgram-bro.ddns.net",
