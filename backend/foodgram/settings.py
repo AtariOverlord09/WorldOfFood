@@ -10,7 +10,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 DJANGO_KEY = os.getenv("SECRET_KEY")
 SECRET_KEY = DJANGO_KEY
 
-# SECURITY WARNING: don't run with debug turned on in production!
+# SECURITY WARNING: don't rudn with debug turned on in production!
 DEBUG = True
 
 HOSTS = os.getenv("ALLOWED_HOSTS").split(',')
