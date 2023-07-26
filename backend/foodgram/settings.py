@@ -11,10 +11,9 @@ DJANGO_KEY = os.getenv("SECRET_KEY")
 SECRET_KEY = DJANGO_KEY
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 HOSTS = (os.getenv("ALLOWED_HOSTS"),)
-print(HOSTS)
 ALLOWED_HOSTS = HOSTS
 
 
@@ -90,11 +89,11 @@ DATABASES = {
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('POSTGRES_DB', 'foodgram_db'),
-        'USER': os.environ.get('POSTGRES_USER', 'foodgram_user'),
-        'PASSWORD': os.environ.get('POSTGRES_PASSWORD', ''),
-        'HOST': os.environ.get('DB_HOST', 'db'),
-        'PORT': os.environ.get('DB_PORT', 5432)
+        'NAME': os.getenv('POSTGRES_DB', 'foodgram_db'),
+        'USER': os.getenv('POSTGRES_USER', 'foodgram_user'),
+        'PASSWORD': os.getenv('POSTGRES_PASSWORD', ''),
+        'HOST': os.getenv('DB_HOST', 'db'),
+        'PORT': os.getenv('DB_PORT', 5432)
     }
 }
 
