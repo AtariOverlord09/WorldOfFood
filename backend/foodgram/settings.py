@@ -49,6 +49,10 @@ MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
+
+CORS_ALLOWED_ORIGINS = [
+    "https://foodgram-bro.ddns.net",
+]
 CORS_ALLOWED_METHODS = [
     "DELETE",
     "GET",
