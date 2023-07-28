@@ -23,3 +23,7 @@ class RecipeFilter(django_filters.FilterSet):
     class Meta:
         model = Recipe
         fields = ('tags', 'author')
+
+    def __init__(self, *args, **kwargs):
+        super(RecipeFilter, self).__init__(*args, **kwargs)
+        self.queryset = self.queryset.distinct()
