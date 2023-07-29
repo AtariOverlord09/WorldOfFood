@@ -13,6 +13,14 @@ class IngredientFilter(SearchFilter):
 
     search_param = 'name'
 
+    def filter_queryset(self, request, queryset, view):
+        search_value = request.query_params.get(self.search_param)
+
+        if search_value:
+            queryset = queryset.filter(name__icontains=search_value)
+
+        return queryset
+
 
 class RecipeFilter(django_filters.FilterSet):
     """Фильтр для рецептов."""
@@ -23,7 +31,3 @@ class RecipeFilter(django_filters.FilterSet):
     class Meta:
         model = Recipe
         fields = ('tags', 'author')
-
-    def __init__(self, *args, **kwargs):
-        super(RecipeFilter, self).__init__(*args, **kwargs)
-        self.queryset = self.queryset.distinct()
