@@ -264,7 +264,7 @@ class RecipesWriteSerializer(serializers.ModelSerializer):
         with transaction.atomic():
             self._add_ingredients(recipe, ingredients)
 
-        tags_data = validated_data.get('tags')
+        tags_data = self.initial_data.get('tags')
         if tags_data:
             recipe.tags.clear()
             for tag in tags_data:
