@@ -263,7 +263,12 @@ class RecipesWriteSerializer(serializers.ModelSerializer):
 
         with transaction.atomic():
             self._add_ingredients(recipe, ingredients)
-        recipe.tags.set(validated_data.get('tags', recipe.tags.all()))
+
+        tags_data = validated_data.get('tags')
+        if tags_data:
+            recipe.tags.clear()
+            for tag in tags_data:
+                recipe.tags.add(tag)
 
         return recipe
 
