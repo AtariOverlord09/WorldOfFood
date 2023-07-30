@@ -19,12 +19,6 @@ class CustomUserAdmin(admin.ModelAdmin):
     list_display = (
         'id',
         'username',
-        'change_user_link',
-        'first_name',
-        'last_name',
-        'email',
-        'is_staff',
-        'is_active',
     )
     list_filter = ('email', 'username')
     search_fields = ('username', 'email', 'first_name', 'last_name')
