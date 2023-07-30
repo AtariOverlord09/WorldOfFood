@@ -6,7 +6,7 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 User = get_user_model()
 
 
-class CustomUserAdmin(BaseUserAdmin):
+class CustomUserAdmin(admin.ModelAdmin):
     """Модель пользователя в админке."""
 
     list_display = (
