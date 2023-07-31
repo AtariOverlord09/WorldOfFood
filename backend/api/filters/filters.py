@@ -24,6 +24,20 @@ class IngredientFilter(SearchFilter):
 
 
 class RecipeFilter(django_filters.FilterSet):
+    """
+    Мощный фильтр для рецептов на основе тегов.
+
+    Атрибуты:
+        tags (django_filters.CharFilter): Фильтр рецептов по тегам.
+
+    Meta:
+        model (Recipe): Модель для рецептов.
+        fields (tuple): Поля, доступные для фильтрации, включая теги и авторов.
+
+    Итак, приготовьте свои вкусовые рецепторы,
+    и пусть начнется поиск вашего идеального рецепта!
+    """
+
     tags = django_filters.CharFilter(
         field_name='tags__slug',
         method='filter_by_tags',
@@ -33,14 +47,19 @@ class RecipeFilter(django_filters.FilterSet):
         model = Recipe
         fields = ('tags', 'author')
 
-    def filter_by_tags(self, queryset, name, value):
-        """Метод фильтрации рецептов по каждому из указанных в запросе тегу."""
 
-        tags_param = self.request.GET.getlist('tags')
+def filter_by_tags(self, queryset, name, value):
+    """
+    Метод фильтрации по каждому из указанных в запросе тегу.
+    Возвращает:
+        QuerySet: Набор запросов, освященный выбранными тегами,
+        свободный от дубликатов и готовый служить вашим желаниям.
+    """
 
-        queries = Q()
+    tags = self.request.GET.getlist('tags')
+    tag_filters = Q()
 
-        for tag in tags_param:
-            queries |= Q(tags__slug=tag)
+    for tag in tags:
+        tag_filters |= Q(tags__slug=tag)
 
-        return queryset.filter(queries)
+    return queryset.filter(tag_filters)
