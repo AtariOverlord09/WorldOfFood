@@ -44,9 +44,9 @@ class RecipeFilter(django_filters.FilterSet):
         tags = self.request.GET.getlist('tags')
 
         # Исключаем теги, которые не привязаны ни к одному рецепту
-        valid_tags = TagRecipe.objects.filter(
-            slug__in=tags
-        ).annotate(recipe_count=Count('recipe'))
+        valid_tags = TagRecipe.objects.filter(slug__in=tags).annotate(
+            recipe_count=Count('recipe')
+        )
         valid_tags = [tag.slug for tag in valid_tags if tag.recipe_count > 0]
 
         # Фильтруем рецепты по каждому из указанных тегов
