@@ -1,6 +1,7 @@
 """Фильтры для рецептов."""
 import django_filters
 from django.contrib.auth import get_user_model
+from django.db.models import Q
 from rest_framework.filters import SearchFilter
 
 from recipes.models import Recipe
@@ -23,11 +24,23 @@ class IngredientFilter(SearchFilter):
 
 
 class RecipeFilter(django_filters.FilterSet):
-    """Фильтр для рецептов."""
-
-    author = django_filters.CharFilter(field_name='author__id')
-    tags = django_filters.AllValuesMultipleFilter(field_name='tags__slug')
+    tags = django_filters.CharFilter(
+        field_name='tags__slug',
+        method='filter_by_tags',
+    )
 
     class Meta:
         model = Recipe
         fields = ('tags', 'author')
+
+    def filter_by_tags(self, queryset, name, value):
+        """Метод фильтрации рецептов по каждому из указанных в запросе тегу."""
+
+        tags_param = self.request.GET.getlist('tags')
+
+        queries = Q()
+
+        for tag in tags_param:
+            queries |= Q(tags__slug=tag)
+
+        return queryset.filter(queries)
