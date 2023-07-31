@@ -1,10 +1,10 @@
 """Фильтры для рецептов."""
 import django_filters
 from django.contrib.auth import get_user_model
-from django.db.models import Q
+from django.db.models import Count
 from rest_framework.filters import SearchFilter
 
-from recipes.models import Recipe
+from recipes.models import Recipe, TagRecipe
 
 User = get_user_model()
 
@@ -24,20 +24,6 @@ class IngredientFilter(SearchFilter):
 
 
 class RecipeFilter(django_filters.FilterSet):
-    """
-    Мощный фильтр для рецептов на основе тегов.
-
-    Атрибуты:
-        tags (django_filters.CharFilter): Фильтр рецептов по тегам.
-
-    Meta:
-        model (Recipe): Модель для рецептов.
-        fields (tuple): Поля, доступные для фильтрации, включая теги и авторов.
-
-    Итак, приготовьте свои вкусовые рецепторы,
-    и пусть начнется поиск вашего идеального рецепта!
-    """
-
     tags = django_filters.CharFilter(
         field_name='tags__slug',
         method='filter_by_tags',
@@ -49,16 +35,22 @@ class RecipeFilter(django_filters.FilterSet):
 
     def filter_by_tags(self, queryset, name, value):
         """
-        Метод фильтрации по каждому из указанных в запросе тегу.
+        Метод фильтрации рецептов по каждому из указанных в запросе тегу.
         Возвращает:
-            QuerySet: Набор запросов, освященный выбранными тегами,
-            свободный от дубликатов и готовый служить вашим желаниям.
+            QuerySet: Набор запросов, содержащий рецепты,
+            которые имеют все указанные теги.
         """
 
         tags = self.request.GET.getlist('tags')
-        tag_filters = Q()
 
-        for tag in tags:
-            tag_filters |= Q(tags__slug=tag)
+        # Исключаем теги, которые не привязаны ни к одному рецепту
+        valid_tags = TagRecipe.objects.filter(
+            slug__in=tags
+        ).annotate(recipe_count=Count('recipe'))
+        valid_tags = [tag.slug for tag in valid_tags if tag.recipe_count > 0]
 
-        return queryset.filter(tag_filters)
+        # Фильтруем рецепты по каждому из указанных тегов
+        for tag in valid_tags:
+            queryset = queryset.filter(tags__slug=tag)
+
+        return queryset
