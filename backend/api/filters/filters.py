@@ -47,19 +47,18 @@ class RecipeFilter(django_filters.FilterSet):
         model = Recipe
         fields = ('tags', 'author')
 
+    def filter_by_tags(self, queryset, name, value):
+        """
+        Метод фильтрации по каждому из указанных в запросе тегу.
+        Возвращает:
+            QuerySet: Набор запросов, освященный выбранными тегами,
+            свободный от дубликатов и готовый служить вашим желаниям.
+        """
 
-def filter_by_tags(self, queryset, name, value):
-    """
-    Метод фильтрации по каждому из указанных в запросе тегу.
-    Возвращает:
-        QuerySet: Набор запросов, освященный выбранными тегами,
-        свободный от дубликатов и готовый служить вашим желаниям.
-    """
+        tags = self.request.GET.getlist('tags')
+        tag_filters = Q()
 
-    tags = self.request.GET.getlist('tags')
-    tag_filters = Q()
+        for tag in tags:
+            tag_filters |= Q(tags__slug=tag)
 
-    for tag in tags:
-        tag_filters |= Q(tags__slug=tag)
-
-    return queryset.filter(tag_filters)
+        return queryset.filter(tag_filters)
