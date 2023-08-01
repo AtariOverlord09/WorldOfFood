@@ -1,7 +1,6 @@
 """Фильтры для рецептов."""
 import django_filters
 from django.contrib.auth import get_user_model
-from django.db.models import Count
 from rest_framework.filters import SearchFilter
 
 from recipes.models import Recipe, TagRecipe
@@ -24,33 +23,14 @@ class IngredientFilter(SearchFilter):
 
 
 class RecipeFilter(django_filters.FilterSet):
-    tags = django_filters.CharFilter(
+    """Фильтр рецептов."""
+
+    tags = django_filters.ModelMultipleChoiceFilter(
         field_name='tags__slug',
-        method='filter_by_tags',
+        to_field_name='slug',
+        queryset=TagRecipe.objects.all(),
     )
 
     class Meta:
         model = Recipe
         fields = ('tags', 'author')
-
-    def filter_by_tags(self, queryset, name, value):
-        """
-        Метод фильтрации рецептов по каждому из указанных в запросе тегу.
-        Возвращает:
-            QuerySet: Набор запросов, содержащий рецепты,
-            которые имеют все указанные теги.
-        """
-
-        tags = self.request.GET.getlist('tags')
-
-        # Исключаем теги, которые не привязаны ни к одному рецепту
-        valid_tags = TagRecipe.objects.filter(slug__in=tags).annotate(
-            recipe_count=Count('recipe')
-        )
-        valid_tags = [tag.slug for tag in valid_tags if tag.recipe_count > 0]
-
-        # Фильтруем рецепты по каждому из указанных тегов
-        for tag in valid_tags:
-            queryset = queryset.filter(tags__slug=tag)
-
-        return queryset
