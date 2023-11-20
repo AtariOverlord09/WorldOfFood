@@ -1,5 +1,6 @@
 # Самый лучший проект WorldOfFood
 
+## Описание
 Проект представляет из себя кулинарную платформу, которая позволяет публиковать и просматривать рецепты. WorldOfFood позволяет помечать рецепты как избранные чтобы их не потерять в списке опубликованных. Так же есть удобная возможность поместить рецепт в корзину, что дает возможность скачать необходимые ингредиенты в формате txt. 
 Если какой-либо пользователь понравился вам своими кулинарными изысками, то в Foodgram вы можете подписаться на него и отслеживать обновления его рецептов.
 
@@ -12,15 +13,15 @@ git clone https://github.com/AtariOverlord09/WorldOfFood.git
 
 2.Для создания образа backend выполнить команду:
 ```
-docker build -t foodgram_backend . 
+docker build -t world_of_food . 
 ```
 
 3.Заполнить .env файл по формату env.example:
 ```
-POSTGRES_DB=kittygram
-POSTGRES_USER=kittygram_user
-POSTGRES_PASSWORD=kittygram_password
-DB_NAME=kittygram
+POSTGRES_DB=foodgram_db
+POSTGRES_USER=foodgram_user
+POSTGRES_PASSWORD=foodgram_password
+DB_NAME=foodgram
 ALLOWED_HOSTS=localhost,host,127.0.0.1,
 SECRET_KEY=django_key
 ```
