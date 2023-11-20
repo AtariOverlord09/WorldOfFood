@@ -7,7 +7,7 @@
 ## Установка
 1.Склонировать репозиторий на локальный компьютер:
 ```
-git clone https://github.com/AtariOverlord09/kittygram_final.git
+git clone https://github.com/AtariOverlord09/WorldOfFood.git
 ```
 
 2.Для создания образа backend выполнить команду:
